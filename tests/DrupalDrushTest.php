@@ -1,71 +1,54 @@
 <?php
-/**
- * Contains test for DrupalDrush Codeception module.
- */
-namespace Codeception\Module\Test;
 
-use Codeception\Module\DrupalDrush;
+namespace Codeception\Module;
 
-class DrupalDrushTest extends \PHPUnit_Framework_TestCase
-{
+use Codeception\Module;
+use Symfony\Component\Process\Process;
+use Symfony\Component\Process\ProcessBuilder;
+
+class DrupalDrush extends Module {
+
     /**
-     * @var DrupalDrush
+     * Execute a drush command.
+     *
+     * @param string $command
+     *   Command to run.
+     *   e.g. "cc"
+     * @param array $arguments
+     *   Array of arguments.
+     *   e.g. array("all")
+     * @param array $options
+     *   Array of options .
+     *   e.g. array("--uid=1", "-y").
+     * @param string $drush
+     *   The drush command to use.
+     *
+     * @return Process
+     *   a symfony/process instance to execute.
      */
-    protected $drush;
-
-    public function setUp()
+    public function getDrush($command, array $arguments, $options = array(), $drush = 'drush')
     {
-        $config = array(
-            "drush-alias" => "@self"
-        );
+        $args = array($drush, $command);
+        $command_args = array_merge($args, $arguments);
+        $processBuilder = new ProcessBuilder($command_args);
 
-        $this->drush = new DrupalDrush($config);
+        foreach ($options as $option) {
+          $processBuilder->add($option);
+        }
+
+        $this->debugSection('Command', $processBuilder->getProcess()->getCommandLine());
+        return $processBuilder->getProcess();
     }
 
-    public function testGetDrushReturnsProcess()
-    {
-        $process = $this->drush->getDrush("cc", array('all'));
-        $this->assertInstanceOf("Symfony\\Component\\Process\\Process", $process);
-    }
-
-    public function testDrushPath()
-    {
-        $process = $this->drush->getDrush("cc", array("all"), array());
-        $this->assertStringStartsWith("'drush'", $process->getCommandLine());
-
-        $process = $this->drush->getDrush("cc", array("all"), array(), "vendor/bin/drush");
-        $this->assertStringStartsWith("'vendor/bin/drush'", $process->getCommandLine());
-    }
-
-    public function testArgumentsAreEscaped()
-    {
-        $process = $this->drush->getDrush("cc", array("a b c"), array());
-        $this->assertContains('a b c', $process->getCommandLine());
-    }
-
-    public function testOptions()
-    {
-        $process = $this->drush->getDrush("cc", array(), array("u" => "123"));
-        $this->assertContains("'-u 123'", $process->getCommandLine());
-
-        $process = $this->drush->getDrush("cc", array(), array("user" => "123"));
-        $this->assertContains("'--user=123'", $process->getCommandLine());
-    }
-
-    public function testOptionsWithNoValue()
-    {
-        $process = $this->drush->getDrush("cc", array(), array("u" => null));
-        $this->assertContains("'-u'", $process->getCommandLine());
-        $this->assertNotContains("'-u null'", $process->getCommandLine());
-
-        $process = $this->drush->getDrush("cc", array(), array("user" => null));
-        $this->assertContains("'--user'", $process->getCommandLine());
-        $this->assertNotContains("'--user=null'", $process->getCommandLine());
-    }
-
-    public function testAlias()
-    {
-        $process = $this->drush->getDrush("cc", array('all'));
-        $this->stringStartsWith("'drush' '@self'", $process->getCommandLine());
+    public function getLoginUri($uid = '') {
+      $user = [];
+      if (!empty($uid)) {
+        $user = ['--uid=' . $uid];
+      }
+      /** @var \Symfony\Component\Process\Process $process */
+      $process = $this->getDrush('uli', $user);
+      $process->run();
+      $gen_url = str_replace(PHP_EOL, '', $process->getOutput());
+      return substr($gen_url, strpos($gen_url, '/user/reset'));
     }
 }
