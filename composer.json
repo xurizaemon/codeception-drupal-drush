@@ -1,12 +1,16 @@
 {
     "name": "guncha25/codecept-drupal-drush",
     "description": "A Codeception module to allow drush commands to be run during tests.",
-    "homepage": "https://github.com/ixis/codeception-drupal-drush",
+    "homepage": "https://github.com/guncha25/codecept-drupal-drush",
     "license": "MIT",
     "authors": [
         {
             "name": "Andy Rigby",
             "email": "andy.rigby@ixis.co.uk"
+        },
+        {
+            "name": "Guntis Jakovins",
+            "email": "guntis.jakovins@wunder.io"
         }
     ],
     "autoload": {
