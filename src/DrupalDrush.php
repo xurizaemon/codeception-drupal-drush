@@ -7,11 +7,6 @@ use Symfony\Component\Process\Process;
 use Symfony\Component\Process\ProcessBuilder;
 
 class DrupalDrush extends Module {
-    /**
-     * @var array
-     *   List of required config fields.
-     */
-    protected $requiredFields = array('drush-alias');
 
     /**
      * Execute a drush command.
@@ -23,8 +18,8 @@ class DrupalDrush extends Module {
      *   Array of arguments.
      *   e.g. array("all")
      * @param array $options
-     *   Array of options in key => value format.
-     *   e.g. array("help" => null, "v" => null, "uid" => "2,3".
+     *   Array of options .
+     *   e.g. array("--uid=1", "-y").
      * @param string $drush
      *   The drush command to use.
      *
@@ -33,39 +28,27 @@ class DrupalDrush extends Module {
      */
     public function getDrush($command, array $arguments, $options = array(), $drush = 'drush')
     {
-        $args = array($drush, $this->config['drush-alias'], "-y", $command);
+        $args = array($drush, $command);
         $command_args = array_merge($args, $arguments);
-        $b = new ProcessBuilder($command_args);
+        $processBuilder = new ProcessBuilder($command_args);
 
-        foreach ($options as $opt => $value) {
-            if (!isset($value)) {
-                if (strlen($opt) == 1) {
-                    $b->add("-$opt");
-                } else {
-                    $b->add("--$opt");
-                }
-            } else {
-                if (strlen($opt) == 1) {
-                    $b->add(
-                        sprintf(
-                            "-%s %s",
-                            $opt,
-                            $value
-                        )
-                    );
-                } else {
-                    $b->add(
-                        sprintf(
-                            "--%s=%s",
-                            $opt,
-                            $value
-                        )
-                    );
-                }
-            }
+        foreach ($options as $option) {
+          $processBuilder->add($option);
         }
 
-        $this->debugSection('Command', $b->getProcess()->getCommandLine());
-        return $b->getProcess();
+        $this->debugSection('Command', $processBuilder->getProcess()->getCommandLine());
+        return $processBuilder->getProcess();
+    }
+
+    public function getLoginUri($uid = '') {
+      $user = [];
+      if (!empty($uid)) {
+        $user = ['--uid=' . $uid];
+      }
+      /** @var \Symfony\Component\Process\Process $process */
+      $process = $this->getDrush('uli', $user);
+      $process->run();
+      $gen_url = str_replace(PHP_EOL, '', $process->getOutput());
+      return substr($gen_url, strpos($gen_url, '/user/reset'));
     }
 }
