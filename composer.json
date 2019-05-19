@@ -1,5 +1,5 @@
 {
-    "name": "fuzionnz/codeception-drupal-drush",
+    "name": "xurizaemon/codeception-drupal-drush",
     "description": "A Codeception module to allow drush commands to be run during tests.",
     "homepage": "https://github.com/guncha25/codecept-drupal-drush",
     "license": "MIT",
@@ -19,7 +19,7 @@
         }
     },
     "require": {
-        "codeception/codeception": "^2.2",
+        "codeception/codeception": "~3",
         "symfony/process": "^2"
     },
     "require-dev": {
